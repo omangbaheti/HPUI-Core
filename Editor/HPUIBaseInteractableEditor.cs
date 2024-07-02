@@ -1,6 +1,6 @@
 using UnityEditor;
 using ubco.ovilab.HPUI.Interaction;
-using UnityEditor.XR.Interaction.Toolkit;
+
 using System.Collections.Generic;
 using UnityEngine;
 using ubco.ovilab.HPUI.Tracking;
@@ -9,7 +9,7 @@ namespace ubco.ovilab.HPUI.Editor
 {
     [CanEditMultipleObjects]
     [CustomEditor(typeof(HPUIBaseInteractable), true)]
-    public class HPUIBaseInteractableEditor: XRBaseInteractableEditor
+    public class HPUIBaseInteractableEditor: UnityEditor.XR.Interaction.Toolkit.Interactables.XRBaseInteractableEditor
     {
         private HPUIBaseInteractable t;
         protected List<SerializedProperty> eventProperties;

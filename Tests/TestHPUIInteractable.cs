@@ -74,45 +74,45 @@ namespace ubco.ovilab.HPUI.Tests
         #endregion
 
         #region Implement all other interfaces
-        SelectEnterEvent IXRSelectInteractable.firstSelectEntered => throw new NotImplementedException();
+        SelectEnterEvent UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable.firstSelectEntered => throw new NotImplementedException();
 
-        SelectExitEvent IXRSelectInteractable.lastSelectExited => throw new NotImplementedException();
+        SelectExitEvent UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable.lastSelectExited => throw new NotImplementedException();
 
-        SelectEnterEvent IXRSelectInteractable.selectEntered => throw new NotImplementedException();
+        SelectEnterEvent UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable.selectEntered => throw new NotImplementedException();
 
-        SelectExitEvent IXRSelectInteractable.selectExited => throw new NotImplementedException();
+        SelectExitEvent UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable.selectExited => throw new NotImplementedException();
 
-        List<IXRSelectInteractor> IXRSelectInteractable.interactorsSelecting => throw new NotImplementedException();
+        List<UnityEngine.XR.Interaction.Toolkit.Interactors.IXRSelectInteractor> UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable.interactorsSelecting => throw new NotImplementedException();
 
-        IXRSelectInteractor IXRSelectInteractable.firstInteractorSelecting => throw new NotImplementedException();
+        UnityEngine.XR.Interaction.Toolkit.Interactors.IXRSelectInteractor UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable.firstInteractorSelecting => throw new NotImplementedException();
 
-        bool IXRSelectInteractable.isSelected => throw new NotImplementedException();
+        bool UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable.isSelected => throw new NotImplementedException();
 
-        InteractableSelectMode IXRSelectInteractable.selectMode => throw new NotImplementedException();
+        UnityEngine.XR.Interaction.Toolkit.Interactables.InteractableSelectMode UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable.selectMode => throw new NotImplementedException();
 
-        InteractionLayerMask IXRInteractable.interactionLayers => throw new NotImplementedException();
+        InteractionLayerMask UnityEngine.XR.Interaction.Toolkit.Interactables.IXRInteractable.interactionLayers => throw new NotImplementedException();
 
-        List<Collider> IXRInteractable.colliders => throw new NotImplementedException();
+        List<Collider> UnityEngine.XR.Interaction.Toolkit.Interactables.IXRInteractable.colliders => throw new NotImplementedException();
 
-        Transform IXRInteractable.transform => throw new NotImplementedException();
+        Transform UnityEngine.XR.Interaction.Toolkit.Interactables.IXRInteractable.transform => throw new NotImplementedException();
 
-        HoverEnterEvent IXRHoverInteractable.firstHoverEntered => throw new NotImplementedException();
+        HoverEnterEvent UnityEngine.XR.Interaction.Toolkit.Interactables.IXRHoverInteractable.firstHoverEntered => throw new NotImplementedException();
 
-        HoverExitEvent IXRHoverInteractable.lastHoverExited => throw new NotImplementedException();
+        HoverExitEvent UnityEngine.XR.Interaction.Toolkit.Interactables.IXRHoverInteractable.lastHoverExited => throw new NotImplementedException();
 
-        HoverEnterEvent IXRHoverInteractable.hoverEntered => throw new NotImplementedException();
+        HoverEnterEvent UnityEngine.XR.Interaction.Toolkit.Interactables.IXRHoverInteractable.hoverEntered => throw new NotImplementedException();
 
-        HoverExitEvent IXRHoverInteractable.hoverExited => throw new NotImplementedException();
+        HoverExitEvent UnityEngine.XR.Interaction.Toolkit.Interactables.IXRHoverInteractable.hoverExited => throw new NotImplementedException();
 
-        List<IXRHoverInteractor> IXRHoverInteractable.interactorsHovering => throw new NotImplementedException();
+        List<UnityEngine.XR.Interaction.Toolkit.Interactors.IXRHoverInteractor> UnityEngine.XR.Interaction.Toolkit.Interactables.IXRHoverInteractable.interactorsHovering => throw new NotImplementedException();
 
-        bool IXRHoverInteractable.isHovered => throw new NotImplementedException();
+        bool UnityEngine.XR.Interaction.Toolkit.Interactables.IXRHoverInteractable.isHovered => throw new NotImplementedException();
 
         HPUITapEvent IHPUIInteractable.TapEvent => throw new NotImplementedException();
 
         HPUIGestureEvent IHPUIInteractable.GestureEvent => throw new NotImplementedException();
 
-        event Action<InteractableRegisteredEventArgs> IXRInteractable.registered
+        event Action<InteractableRegisteredEventArgs> UnityEngine.XR.Interaction.Toolkit.Interactables.IXRInteractable.registered
         {
             add
             {
@@ -125,7 +125,7 @@ namespace ubco.ovilab.HPUI.Tests
             }
         }
 
-        event Action<InteractableUnregisteredEventArgs> IXRInteractable.unregistered
+        event Action<InteractableUnregisteredEventArgs> UnityEngine.XR.Interaction.Toolkit.Interactables.IXRInteractable.unregistered
         {
             add
             {
@@ -138,86 +138,86 @@ namespace ubco.ovilab.HPUI.Tests
             }
         }
 
-        Pose IXRSelectInteractable.GetAttachPoseOnSelect(IXRSelectInteractor interactor)
+        Pose UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable.GetAttachPoseOnSelect(UnityEngine.XR.Interaction.Toolkit.Interactors.IXRSelectInteractor interactor)
         {
             throw new NotImplementedException();
         }
 
-        Transform IXRInteractable.GetAttachTransform(IXRInteractor interactor)
+        Transform UnityEngine.XR.Interaction.Toolkit.Interactables.IXRInteractable.GetAttachTransform(UnityEngine.XR.Interaction.Toolkit.Interactors.IXRInteractor interactor)
         {
             throw new NotImplementedException();
         }
 
-        float IXRInteractable.GetDistanceSqrToInteractor(IXRInteractor interactor)
+        float UnityEngine.XR.Interaction.Toolkit.Interactables.IXRInteractable.GetDistanceSqrToInteractor(UnityEngine.XR.Interaction.Toolkit.Interactors.IXRInteractor interactor)
         {
             throw new NotImplementedException();
         }
 
-        Pose IXRSelectInteractable.GetLocalAttachPoseOnSelect(IXRSelectInteractor interactor)
+        Pose UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable.GetLocalAttachPoseOnSelect(UnityEngine.XR.Interaction.Toolkit.Interactors.IXRSelectInteractor interactor)
         {
             throw new NotImplementedException();
         }
 
-        bool IXRSelectInteractable.IsSelectableBy(IXRSelectInteractor interactor)
+        bool UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable.IsSelectableBy(UnityEngine.XR.Interaction.Toolkit.Interactors.IXRSelectInteractor interactor)
         {
             throw new NotImplementedException();
         }
 
-        void IXRInteractable.OnRegistered(InteractableRegisteredEventArgs args)
+        void UnityEngine.XR.Interaction.Toolkit.Interactables.IXRInteractable.OnRegistered(InteractableRegisteredEventArgs args)
         {
             throw new NotImplementedException();
         }
 
-        void IXRSelectInteractable.OnSelectEntered(SelectEnterEventArgs args)
+        void UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable.OnSelectEntered(SelectEnterEventArgs args)
         {
             throw new NotImplementedException();
         }
 
-        void IXRSelectInteractable.OnSelectEntering(SelectEnterEventArgs args)
+        void UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable.OnSelectEntering(SelectEnterEventArgs args)
         {
             throw new NotImplementedException();
         }
 
-        void IXRSelectInteractable.OnSelectExited(SelectExitEventArgs args)
+        void UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable.OnSelectExited(SelectExitEventArgs args)
         {
             throw new NotImplementedException();
         }
 
-        void IXRSelectInteractable.OnSelectExiting(SelectExitEventArgs args)
+        void UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable.OnSelectExiting(SelectExitEventArgs args)
         {
             throw new NotImplementedException();
         }
-        void IXRInteractable.OnUnregistered(InteractableUnregisteredEventArgs args)
-        {
-            throw new NotImplementedException();
-        }
-
-        void IXRInteractable.ProcessInteractable(XRInteractionUpdateOrder.UpdatePhase updatePhase)
+        void UnityEngine.XR.Interaction.Toolkit.Interactables.IXRInteractable.OnUnregistered(InteractableUnregisteredEventArgs args)
         {
             throw new NotImplementedException();
         }
 
-        bool IXRHoverInteractable.IsHoverableBy(IXRHoverInteractor interactor)
+        void UnityEngine.XR.Interaction.Toolkit.Interactables.IXRInteractable.ProcessInteractable(XRInteractionUpdateOrder.UpdatePhase updatePhase)
         {
             throw new NotImplementedException();
         }
 
-        void IXRHoverInteractable.OnHoverEntering(HoverEnterEventArgs args)
+        bool UnityEngine.XR.Interaction.Toolkit.Interactables.IXRHoverInteractable.IsHoverableBy(UnityEngine.XR.Interaction.Toolkit.Interactors.IXRHoverInteractor interactor)
         {
             throw new NotImplementedException();
         }
 
-        void IXRHoverInteractable.OnHoverEntered(HoverEnterEventArgs args)
+        void UnityEngine.XR.Interaction.Toolkit.Interactables.IXRHoverInteractable.OnHoverEntering(HoverEnterEventArgs args)
         {
             throw new NotImplementedException();
         }
 
-        void IXRHoverInteractable.OnHoverExiting(HoverExitEventArgs args)
+        void UnityEngine.XR.Interaction.Toolkit.Interactables.IXRHoverInteractable.OnHoverEntered(HoverEnterEventArgs args)
         {
             throw new NotImplementedException();
         }
 
-        void IXRHoverInteractable.OnHoverExited(HoverExitEventArgs args)
+        void UnityEngine.XR.Interaction.Toolkit.Interactables.IXRHoverInteractable.OnHoverExiting(HoverExitEventArgs args)
+        {
+            throw new NotImplementedException();
+        }
+
+        void UnityEngine.XR.Interaction.Toolkit.Interactables.IXRHoverInteractable.OnHoverExited(HoverExitEventArgs args)
         {
             throw new NotImplementedException();
         }

@@ -144,7 +144,7 @@ namespace ubco.ovilab.HPUI.Interaction
         }
 
         /// <inheritdoc />
-        public override Transform GetAttachTransform(IXRInteractor interactor)
+        public override Transform GetAttachTransform(UnityEngine.XR.Interaction.Toolkit.Interactors.IXRInteractor interactor)
         {
             if (interactor == null)
             {
@@ -161,7 +161,7 @@ namespace ubco.ovilab.HPUI.Interaction
         public override Vector2 ComputeInteractorPostion(IHPUIInteractor interactor)
         {
             // TODO: add value from pointOnPlane (the point on the collider)
-            DistanceInfo distanceInfo = GetDistanceOverride(this, interactor.GetCollisionPoint(this));
+            UnityEngine.XR.Interaction.Toolkit.Interactables.DistanceInfo distanceInfo = GetDistanceOverride(this, interactor.GetCollisionPoint(this));
             // Vector3 closestPointOnCollider = distanceInfo.point;
             // Vector2 pointOnPlane = ComputeTargetPointOnInteractablePlane(closestPointOnCollider, GetAttachTransform(interactor));
             return surfaceCollidersManager.GetSurfacePointForCollider(distanceInfo.collider);

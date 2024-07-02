@@ -1,17 +1,17 @@
 using UnityEditor;
 using ubco.ovilab.HPUI.Interaction;
-using UnityEditor.XR.Interaction.Toolkit;
+
 using System.Collections.Generic;
 using ubco.ovilab.HPUI.Tracking;
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit;
+
 using UnityEngine.XR.Hands;
 
 namespace ubco.ovilab.HPUI.Editor
 {
     [CanEditMultipleObjects]
     [CustomEditor(typeof(HPUIInteractor), true)]
-    public class HPUIInteractorEditor: XRBaseInteractorEditor
+    public class HPUIInteractorEditor: UnityEditor.XR.Interaction.Toolkit.Interactors.XRBaseInteractorEditor
     {
         protected readonly string defaultConeRayAnglesAsset = "Packages/ubc.ok.ovilab.hpui-core/Runtime/Resources/HPUIInteractorRayAngles_intersection.asset";
         private HPUIInteractor t;
@@ -91,9 +91,9 @@ namespace ubco.ovilab.HPUI.Editor
                 EditorGUILayout.HelpBox("Using handedness from JointFollower", MessageType.Info);
                 GUI.enabled = false;
                 t.handedness = jointFollower.Handedness switch {
-                    Handedness.Right => InteractorHandedness.Right,
-                    Handedness.Left => InteractorHandedness.Left,
-                    _ => InteractorHandedness.None,
+                    Handedness.Right => UnityEngine.XR.Interaction.Toolkit.Interactors.InteractorHandedness.Right,
+                    Handedness.Left => UnityEngine.XR.Interaction.Toolkit.Interactors.InteractorHandedness.Left,
+                    _ => UnityEngine.XR.Interaction.Toolkit.Interactors.InteractorHandedness.None,
                 };
                 EditorGUILayout.PropertyField(m_Handedness, BaseContents.handedness);
                 GUI.enabled = true;

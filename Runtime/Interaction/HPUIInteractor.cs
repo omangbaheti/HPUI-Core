@@ -15,10 +15,10 @@ namespace ubco.ovilab.HPUI.Interaction
     [SelectionBase]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(XRHandTrackingEvents))]
-    public class HPUIInteractor: XRBaseInteractor, IHPUIInteractor
+    public class HPUIInteractor: UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor, IHPUIInteractor
     {
         /// <inheritdoc />
-        public new InteractorHandedness handedness
+        public new UnityEngine.XR.Interaction.Toolkit.Interactors.InteractorHandedness handedness
         {
             get => base.handedness;
             set
@@ -273,11 +273,11 @@ namespace ubco.ovilab.HPUI.Interaction
         {
             xrHandTrackingEvents = GetComponent<XRHandTrackingEvents>();
             xrHandTrackingEvents.handedness = handedness switch {
-                InteractorHandedness.Right => Handedness.Right,
-                InteractorHandedness.Left => Handedness.Left,
+                UnityEngine.XR.Interaction.Toolkit.Interactors.InteractorHandedness.Right => Handedness.Right,
+                UnityEngine.XR.Interaction.Toolkit.Interactors.InteractorHandedness.Left => Handedness.Left,
                 _ => Handedness.Invalid
             };
-            flipZAngles = handedness == InteractorHandedness.Left;
+            flipZAngles = handedness == UnityEngine.XR.Interaction.Toolkit.Interactors.InteractorHandedness.Left;
         }
 
 #if UNITY_EDITOR
@@ -408,7 +408,7 @@ namespace ubco.ovilab.HPUI.Interaction
                             !validTargets.ContainsKey(hpuiInteractable) &&
                             hpuiInteractable.IsHoverableBy(this))
                         {
-                            XRInteractableUtility.TryGetClosestPointOnCollider(interactable, interactionPoint, out DistanceInfo info);
+                            XRInteractableUtility.TryGetClosestPointOnCollider(interactable, interactionPoint, out UnityEngine.XR.Interaction.Toolkit.Interactables.DistanceInfo info);
                             validTargets.Add(hpuiInteractable, new CollisionInfo(Mathf.Sqrt(info.distanceSqr), info.point));
                         }
                     }
@@ -423,7 +423,7 @@ namespace ubco.ovilab.HPUI.Interaction
         }
 
         /// <inheritdoc />
-        public override void GetValidTargets(List<IXRInteractable> targets)
+        public override void GetValidTargets(List<UnityEngine.XR.Interaction.Toolkit.Interactables.IXRInteractable> targets)
         {
             base.GetValidTargets(targets);
 
@@ -440,7 +440,7 @@ namespace ubco.ovilab.HPUI.Interaction
         }
 
         /// <inheritdoc />
-        public override bool CanSelect(IXRSelectInteractable interactable)
+        public override bool CanSelect(UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable interactable)
         {
             bool canSelect = validTargets.TryGetValue(interactable as IHPUIInteractable, out CollisionInfo info) &&
                 info.distance < interactionSelectionRadius &&
