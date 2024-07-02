@@ -1,9 +1,9 @@
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit;
+
 
 namespace ubco.ovilab.HPUI.Interaction 
 {
-    public interface IHPUIInteractable : IXRSelectInteractable, IXRHoverInteractable
+    public interface IHPUIInteractable : UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable, UnityEngine.XR.Interaction.Toolkit.Interactables.IXRHoverInteractable
     {
         /// <summary>
         /// Lower z order will get higher priority.
@@ -26,7 +26,7 @@ namespace ubco.ovilab.HPUI.Interaction
         /// Get the projection of the interactors position on the xz plane of this interactable, normalized.
         /// the returned Vector2 - (x, z) on the xz-plane, relative to the center of the interactable.
         /// </summary>
-        Vector2 ComputeInteractorPostion(IXRInteractor interactor);
+        Vector2 ComputeInteractorPostion(UnityEngine.XR.Interaction.Toolkit.Interactors.IXRInteractor interactor);
 
         /// <summary>
         /// This is called when a tap event occurs on the interactable.

@@ -11,7 +11,7 @@ namespace ubco.ovilab.HPUI.Interaction
     /// </summary>
     [SelectionBase]
     [DisallowMultipleComponent]
-    public class HPUIInteractor: XRBaseInteractor, IHPUIInteractor
+    public class HPUIInteractor: UnityEngine.XR.Interaction.Toolkit.Interactors.XRBaseInteractor, IHPUIInteractor
     {
         // TODO move these to an asset?
         [Tooltip("The time threshold at which an interaction would be treated as a gesture.")]
@@ -60,7 +60,7 @@ namespace ubco.ovilab.HPUI.Interaction
         public float InteractionHoverRadius { get => interactionHoverRadius; set => interactionHoverRadius = value; }
 
         protected IHPUIGestureLogic gestureLogic;
-        private List<IXRInteractable> validTargets = new List<IXRInteractable>();
+        private List<UnityEngine.XR.Interaction.Toolkit.Interactables.IXRInteractable> validTargets = new List<UnityEngine.XR.Interaction.Toolkit.Interactables.IXRInteractable>();
         private bool justStarted = false;
         private Vector3 lastInteractionPoint;
         private PhysicsScene physicsScene;
@@ -184,12 +184,12 @@ namespace ubco.ovilab.HPUI.Interaction
         }
 
         /// <inheritdoc />
-        public override void GetValidTargets(List<IXRInteractable> targets)
+        public override void GetValidTargets(List<UnityEngine.XR.Interaction.Toolkit.Interactables.IXRInteractable> targets)
         {
             base.GetValidTargets(targets);
 
             targets.Clear();
-            foreach(IXRInteractable target in validTargets.Select(t => t as IHPUIInteractable).Where(ht => ht != null).OrderBy(ht => ht.zOrder))
+            foreach(UnityEngine.XR.Interaction.Toolkit.Interactables.IXRInteractable target in validTargets.Select(t => t as IHPUIInteractable).Where(ht => ht != null).OrderBy(ht => ht.zOrder))
             {
                 targets.Add(target);
                 validTargets.Add(target);
@@ -199,7 +199,7 @@ namespace ubco.ovilab.HPUI.Interaction
         // NOTE: PokeInteractor has a bug where it doesn't account for the re-prioritization.
         // See: https://forum.unity.com/threads/xrpokeinteractor-m_currentpoketarget-not-respecting-getvalidtargets-and-target-filters.1534039/#post-9571063
         /// <inheritdoc />
-        public override bool CanSelect(IXRSelectInteractable interactable)
+        public override bool CanSelect(UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable interactable)
         {
             return validTargets.Contains(interactable) && ProcessSelectFilters(interactable);
         }

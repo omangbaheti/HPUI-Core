@@ -1,13 +1,13 @@
 using UnityEditor;
 using ubco.ovilab.HPUI.Interaction;
-using UnityEditor.XR.Interaction.Toolkit;
+
 using System.Collections.Generic;
 
 namespace ubco.ovilab.HPUI.Editor
 {
     [CanEditMultipleObjects]
     [CustomEditor(typeof(HPUIInteractor), true)]
-    public class HPUIInteractorEditor: XRBaseInteractorEditor
+    public class HPUIInteractorEditor: UnityEditor.XR.Interaction.Toolkit.Interactors.XRBaseInteractorEditor
     {
         private HPUIInteractor t;
         protected List<SerializedProperty> eventProperties;

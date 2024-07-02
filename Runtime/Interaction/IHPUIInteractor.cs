@@ -1,8 +1,8 @@
-using UnityEngine.XR.Interaction.Toolkit;
+
 
 namespace ubco.ovilab.HPUI.Interaction 
 {
-    public interface IHPUIInteractor: IXRInteractor, IXRSelectInteractor
+    public interface IHPUIInteractor: UnityEngine.XR.Interaction.Toolkit.Interactors.IXRInteractor, UnityEngine.XR.Interaction.Toolkit.Interactors.IXRSelectInteractor
     {
         /// <summary>
         /// Event triggered on tap

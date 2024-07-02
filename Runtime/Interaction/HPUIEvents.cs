@@ -60,7 +60,7 @@ namespace ubco.ovilab.HPUI.Interaction
         /// <summary>
         /// The Interactor associated with the interaction event.
         /// </summary>
-        public new IXRSelectInteractor interactorObject
+        public new UnityEngine.XR.Interaction.Toolkit.Interactors.IXRSelectInteractor interactorObject
         {
             get => (IHPUIInteractor)base.interactorObject;
             set => base.interactorObject = value;

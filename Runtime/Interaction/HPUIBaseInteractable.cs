@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.XR.Hands;
-using UnityEngine.XR.Interaction.Toolkit;
+
 using UnityEngine.XR.Interaction.Toolkit.Utilities;
 
 namespace ubco.ovilab.HPUI.Interaction
@@ -11,7 +11,7 @@ namespace ubco.ovilab.HPUI.Interaction
     /// </summary>
     [SelectionBase]
     [DisallowMultipleComponent]
-    public class HPUIBaseInteractable: XRBaseInteractable, IHPUIInteractable
+    public class HPUIBaseInteractable: UnityEngine.XR.Interaction.Toolkit.Interactables.XRBaseInteractable, IHPUIInteractable
     {
         [Space()]
         [Header("HPUI Configurations")]
@@ -62,7 +62,7 @@ namespace ubco.ovilab.HPUI.Interaction
         {
             base.Awake();
             getDistanceOverride = GetDistanceOverride;
-            selectMode = InteractableSelectMode.Single;
+            selectMode = UnityEngine.XR.Interaction.Toolkit.Interactables.InteractableSelectMode.Single;
         }
 
         /// <inheritdoc />
@@ -93,9 +93,9 @@ namespace ubco.ovilab.HPUI.Interaction
             boundsMin = ComputeTargetPointOnInteractablePlane(colliderBounds.min, interactableTransform);
         }
 
-        protected DistanceInfo GetDistanceOverride(IXRInteractable interactable, Vector3 position)
+        protected UnityEngine.XR.Interaction.Toolkit.Interactables.DistanceInfo GetDistanceOverride(UnityEngine.XR.Interaction.Toolkit.Interactables.IXRInteractable interactable, Vector3 position)
         {
-            XRInteractableUtility.TryGetClosestPointOnCollider(interactable, position, out DistanceInfo info);
+            XRInteractableUtility.TryGetClosestPointOnCollider(interactable, position, out UnityEngine.XR.Interaction.Toolkit.Interactables.DistanceInfo info);
             return info;
         }
 
@@ -119,7 +119,7 @@ namespace ubco.ovilab.HPUI.Interaction
 
         #region IHPUIInteractable interface
         /// <inheritdoc />
-        public virtual Vector2 ComputeInteractorPostion(IXRInteractor interactor)
+        public virtual Vector2 ComputeInteractorPostion(UnityEngine.XR.Interaction.Toolkit.Interactors.IXRInteractor interactor)
         {
             Vector3 closestPointOnCollider = GetDistanceOverride(this, interactor.GetAttachTransform(this).position).point;
             Vector2 pointOnPlane = ComputeTargetPointOnInteractablePlane(closestPointOnCollider, GetAttachTransform(interactor));
