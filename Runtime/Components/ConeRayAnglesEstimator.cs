@@ -265,53 +265,82 @@ namespace ubco.ovilab.HPUI.Components
                                                                                     List<InteractionDataRecord> interactionRecords,
                                                                                     List<ConeRayAnglesEstimationPair> interactableSegmentPairs)
         {
-            List<HPUIRayCastDetectionBaseLogic.RaycastDataRecord> filteredInteractionRecords = new();
 
             List<IHPUIInteractable> validInteractables = interactableSegmentPairs.Where(pair => pair.segment == segment).Select(pair => pair.interactable as IHPUIInteractable).ToList();
 
-            // For each interaction, get the frame with the shortest distance
+            // List<HPUIRayCastDetectionBaseLogic.RaycastDataRecord> filteredInteractionRecords = new();
+
+            // // For each interaction, get the frame with the shortest distance
+            // foreach (InteractionDataRecord interactionRecord in interactionRecords)
+            // {
+            //     if (interactionRecord.segment == segment)
+            //     {
+            //         var minDistRaycastRecords = interactionRecord.records.AsParallel()
+            //             .Select(frameRaycastRecords =>
+            //             {
+            //                 var filteredRecords = frameRaycastRecords.Where(raycastRecord => validInteractables.Contains(raycastRecord.interactable));
+            //                 if (filteredRecords.Count() == 0)
+            //                 {
+            //                     return null;
+            //                 }
+            //                 else
+            //                 {
+            //                     return new
+            //                     {
+            //                         distance = filteredRecords.Min(raycastRecord => raycastRecord.distance),
+            //                         raycastRecordsForFrame = frameRaycastRecords
+            //                     };
+            //                 }
+            //             })
+            //             .Where(frameRaycastRecords => frameRaycastRecords != null);
+
+            //         Assert.IsTrue(minDistRaycastRecords.Count() > 0, "There's an interaction where no rays had interacted with any of the expected targets. Something has gone wrong!");
+
+            //         filteredInteractionRecords.AddRange(minDistRaycastRecords
+            //                                             .OrderBy(frameRaycastRecords => frameRaycastRecords.distance)
+            //                                             .First()
+            //                                             .raycastRecordsForFrame);
+            //     }
+            // }
+
+            List<HPUIInteractorRayAngle> angles = new();
+
             foreach (InteractionDataRecord interactionRecord in interactionRecords)
             {
                 if (interactionRecord.segment == segment)
                 {
-                    var minDistRaycastRecords = interactionRecord.records.AsParallel()
-                        .Select(frameRaycastRecords =>
-                        {
-                            var filteredRecords = frameRaycastRecords.Where(raycastRecord => validInteractables.Contains(raycastRecord.interactable));
-                            if (filteredRecords.Count() == 0)
-                            {
-                                return null;
-                            }
-                            else
-                            {
-                                return new
-                                {
-                                    distance = filteredRecords.Min(raycastRecord => raycastRecord.distance),
-                                    raycastRecordsForFrame = frameRaycastRecords
-                                };
-                            }
-                        })
-                        .Where(frameRaycastRecords => frameRaycastRecords != null);
+                    IEnumerable<HPUIRayCastDetectionBaseLogic.RaycastDataRecord> filteredInteractionRecords = interactionRecord.records.SelectMany(r => r);
 
-                    Assert.IsTrue(minDistRaycastRecords.Count() > 0, "There's an interaction where no rays had interacted with any of the expected targets. Something has gone wrong!");
+                    // KLUDGE: Does AsParallel help?
+                    var aggragatedAngles = filteredInteractionRecords.AsParallel()
+                        .Where(record => validInteractables.Contains(record.interactable) && record.isWithinThreshold)
+                        .Select(record => new { angle = new HPUIInteractorRayAngle(record.angleX, record.angleZ, 0), distance = record.distance })
+                        // Since the same detection ray angle asset is used, we assume the x, z pairs are going to match.
+                        .GroupBy(record => record.angle, (angle, records) =>
+                                 new
+                                 {
+                                     count = records.Count(),
+                                     angle = new HPUIInteractorRayAngle(angle.X, angle.Z, records.Select(r => r.distance).Sum() / records.Count())
+                                 });
 
-                    filteredInteractionRecords.AddRange(minDistRaycastRecords
-                                                        .OrderBy(frameRaycastRecords => frameRaycastRecords.distance)
-                                                        .First()
-                                                        .raycastRecordsForFrame);
+                    // Lazy 75th percentile
+                    int countThreshold = aggragatedAngles.OrderByDescending(el => el.count).Skip(Mathf.RoundToInt(aggragatedAngles.Count() * 0.75f)).First().count;
+
+
+                    angles.AddRange(aggragatedAngles
+                                    .Where(el => el.count > countThreshold)
+                                    .Select(el => el.angle)
+                                    .ToList());
                 }
             }
-            if (filteredInteractionRecords.Count() == 0)
+
+            if (angles.Count() == 0)
             {
                 return new List<HPUIInteractorRayAngle>();
             }
 
-            // KLUDGE: Does AsParallel help?
-            List<HPUIInteractorRayAngle> coneAnglesForSegment = filteredInteractionRecords.AsParallel()
-                .Where(record => validInteractables.Contains(record.interactable) && record.isWithinThreshold)
-                .Select(record => new { angle = new HPUIInteractorRayAngle(record.angleX, record.angleZ, 0), distance = record.distance })
-                // Since the same detection ray angle asset is used, we assume the x, z pairs are going to match.
-                .GroupBy(record => record.angle, (angle, records) => new HPUIInteractorRayAngle(angle.X, angle.Z, records.Select(r => r.distance).Sum() / records.Count()))
+            List<HPUIInteractorRayAngle> coneAnglesForSegment = angles
+                .GroupBy(a => a, (a, alist) => new HPUIInteractorRayAngle(a.X, a.Z, alist.Average(_a => _a.RaySelectionThreshold)))
                 .ToList();
 
             return coneAnglesForSegment;
