@@ -145,7 +145,6 @@ namespace ubco.ovilab.HPUI.Interaction
                 Vector3 thumbTipPos = jointLocations[XRHandJointID.ThumbTip];
                 XRHandJointID closestJoint = XRHandJointID.BeginMarker;
                 float shortestDistance = float.MaxValue;
-
                 foreach(KeyValuePair<XRHandJointID, XRHandJointID> kvp in trackedJointsToSegment)
                 {
                     Vector3 baseVector = jointLocations[kvp.Key];
@@ -160,7 +159,6 @@ namespace ubco.ovilab.HPUI.Interaction
                         closestJoint = kvp.Key;
                     }
                 }
-
                 if (closestJoint != XRHandJointID.BeginMarker)
                 {
                     activeFingerAngles = closestJoint switch

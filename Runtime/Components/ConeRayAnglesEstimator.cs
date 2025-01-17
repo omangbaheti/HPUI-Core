@@ -66,7 +66,6 @@ namespace ubco.ovilab.HPUI.Components
         private HPUIInteractorFullRangeAngles fullRangeAngles;
         private List<InteractionDataRecord> interactionRecords = new();
         private List<List<HPUIRayCastDetectionBaseLogic.RaycastDataRecord>> currentInteractionData = new();
-        private float step = 5f;
         /// <summary>
         /// Instantiates the estimator. This will subscribe to <see cref="HPUIInteractor.DetectionLogic"/>interactor.DetectionLogic</see>
         /// and the <see cref="IHPUIInteractable.GestureEvent">GestureEvent</see> of each
@@ -267,56 +266,34 @@ namespace ubco.ovilab.HPUI.Components
         {
 
             List<IHPUIInteractable> validInteractables = interactableSegmentPairs.Where(pair => pair.segment == segment).Select(pair => pair.interactable as IHPUIInteractable).ToList();
-
+            List<InteractionDataRecord> segmentRecords = interactionRecords.Where(interactionRecord => interactionRecord.segment == segment).ToList();
             List<HPUIInteractorRayAngle> angles = new();
-
-            int interactionFrames = 0;
-            float averageDistance = 0;
-            for (int i = 0; i < interactionRecords.Count; i++)
+            for (int i = 0; i < segmentRecords.Count/2; i++)
             {
-                var currentRecords = interactionRecords[i];
+                IEnumerable<HPUIRayCastDetectionBaseLogic.RaycastDataRecord> fingerSegmentInteractions = segmentRecords[i].records.SelectMany(r => r);
+                var aggregatedAngles = fingerSegmentInteractions.AsParallel()
+                    .Where(record => validInteractables.Contains(record.interactable) && record.isWithinThreshold)
+                    .Select(record => new { angle = new HPUIInteractorRayAngle(record.angleX, record.angleZ, 0), distance = record.distance })
+                    // Since the same detection ray angle asset is used, we assume the x, z pairs are going to match.
+                    .GroupBy(record => record.angle, (angle, records) =>
+                        new
+                        {
+                            count = records.Count(),
+                            angle = new HPUIInteractorRayAngle(angle.X, angle.Z, records.Select(r => r.distance).Sum() / records.Count())
+                        });
 
-                Vector2 averageMinAngle = Vector2.zero;
-                Vector2 averageMaxAngle = Vector2.zero;
+                float averageDistance = aggregatedAngles.Average(record => record.angle.RaySelectionThreshold);
 
-                if (currentRecords.segment == segment)
-                {
-                    IEnumerable<HPUIRayCastDetectionBaseLogic.RaycastDataRecord> fingerSegmentInteractions = currentRecords.records.SelectMany(r => r);
-                    var aggregatedAngles = fingerSegmentInteractions.AsParallel()
-                        .Where(record => validInteractables.Contains(record.interactable) && record.isWithinThreshold)
-                        .Select(record => new { angle = new HPUIInteractorRayAngle(record.angleX, record.angleZ, 0), distance = record.distance })
-                        // Since the same detection ray angle asset is used, we assume the x, z pairs are going to match.
-                        .GroupBy(record => record.angle, (angle, records) =>
-                            new
-                            {
-                                count = records.Count(),
-                                angle = new HPUIInteractorRayAngle(angle.X, angle.Z, records.Select(r => r.distance).Sum() / records.Count())
-                            });
-                    averageMinAngle.x += aggregatedAngles.Min(record => record.angle.X);
-                    averageMinAngle.y += aggregatedAngles.Min(record => record.angle.Z);
-                    averageMaxAngle.x += aggregatedAngles.Max(record => record.angle.X);
-                    averageMaxAngle.y += aggregatedAngles.Max(record => record.angle.Z);
-                    averageDistance = aggregatedAngles.Average(record => record.angle.RaySelectionThreshold);
-                    interactionFrames++;
-                }
+                int countThreshold = aggregatedAngles.OrderByDescending(el => el.count).Skip(Mathf.RoundToInt(aggregatedAngles.Count() * 0.75f)).First().count;
 
-                averageMinAngle /= interactionFrames;
-                averageMaxAngle /= interactionFrames;
+                List<HPUIInteractorRayAngle> rayInteractionRecords = Enumerable.ToList(aggregatedAngles.Select(angleData =>
+                    new HPUIInteractorRayAngle(angleData.angle.X, angleData.angle.Z, averageDistance)));
 
-                Debug.Log($"Calcualted average for {interactionFrames} frames");
-
-                List<HPUIInteractorRayAngle> raycastDataRecords = new();
-                int index = 0;
-                for (float xAngle = averageMinAngle.x; xAngle <= averageMaxAngle.x; xAngle += step)
-                {
-                    for (float zAngle = averageMinAngle.y; zAngle <= averageMaxAngle.y; zAngle += step)
-                    {
-                        raycastDataRecords.Add(new HPUIInteractorRayAngle(xAngle, zAngle, averageDistance));
-                        index++;
-                    }
-                }
-
-                angles.AddRange(raycastDataRecords);
+                angles.AddRange(rayInteractionRecords);
+                angles.AddRange(aggregatedAngles
+                    .Where(el => el.count > countThreshold)
+                    .Select(el => el.angle)
+                    .ToList());
             }
 
             // foreach (InteractionDataRecord interactionRecord in interactionRecords)
