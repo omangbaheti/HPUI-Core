@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Collections;
 using Unity.Jobs;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Jobs;
+using UnityEngine.XR;
 
 namespace ubco.ovilab.HPUI.Interaction
 {
@@ -46,6 +48,8 @@ namespace ubco.ovilab.HPUI.Interaction
         private float xWidth, yWidth, offsetX, offsetY;
         private Dictionary<Collider, Vector2> colliderCoords = new Dictionary<Collider, Vector2>();
         private Dictionary<Vector2Int, Collider> rawCoordsToCollider = new Dictionary<Vector2Int, Collider>();
+
+        private List<Vector3> centres = new List<Vector3>();
 
         public float XWidth => xWidth;
         public float YWidth => yWidth;
@@ -112,28 +116,118 @@ namespace ubco.ovilab.HPUI.Interaction
 
             offsetX = xWidth * meshXResolution * 0.5f;
             offsetY = yWidth * meshYResolution * 0.5f;
-            Transform[] colliderTransforms = new Transform[vertices.Count];
+            Transform[] colliderTransforms = new Transform[meshXResolution * meshYResolution];
 
-            for (int i = 0; i < remapped_vertices_data.Length; i++)
+            Debug.Log("COunt" + ((meshXResolution-1) * (meshYResolution-1) + meshXResolution + 1)/ meshXResolution);
+            // for (int i = 0; i < ((meshXResolution-1) * (meshYResolution-1)) + meshXResolution; i+=meshXResolution)
+            // {
+            //     int x = i/meshXResolution;
+            //     int y = i % meshXResolution;
+            //     List<int> colliderIndices = new()
+            //     {
+            //         i, i + 1 , i + meshXResolution, i + meshXResolution + 1,
+            //     };
+            //
+            //     Vector3 centre = Vector3.zero;
+            //
+            //     foreach (int index in colliderIndices)
+            //     {
+            //         Handles.color = Color.white;
+            //         var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            //         sphere.transform.parent = mesh.transform;
+            //         sphere.transform.localPosition = vertices[remapped_vertices_data[index]];
+            //         sphere.transform.localScale = Vector3.one * 0.001f;
+            //         sphere.name = "Sphere" + index.ToString();
+            //         centre +=  meshTransform.TransformPoint(vertices[remapped_vertices_data[index]]);
+            //     }
+            //     centre /= colliderIndices.Count;
+            //     // centre = meshTransform.TransformPoint(centre);
+            //     centres.Add(centre);
+            //     GameObject colliderGameObject = new GameObject();
+            //     colliderGameObject.layer = meshTransform.gameObject.layer;
+            //     Collider col = colliderGameObject.AddComponent<BoxCollider>();
+            //     colliderGameObject.name = "X: " + x + "; Y: " + y + ";";
+            //     colliderGameObject.transform.parent = meshTransform;
+            //
+            //     Vector3 targetScale = Vector3.one * 0.001f;
+            //     targetScale.x = localXWidth;
+            //     targetScale.z = localYWidth;
+            //
+            //     colliderGameObject.transform.localScale = targetScale;
+            //     colliderGameObject.transform.localRotation = Quaternion.identity;
+            //     colliderGameObject.transform.localPosition = centre;
+            //
+            //     colliderTransforms[i] = colliderGameObject.transform;
+            //     colliderCoords.Add(col, centre);
+            //     rawCoordsToCollider.Add(new(x,y), col);
+            // }
+
+            for (int y = 0; y < meshYResolution - 1; y++)
             {
-                int x = i % meshXResolution;
-                int y = i / meshXResolution;
-                GameObject colliderGameObject = new GameObject();
-                colliderGameObject.layer = meshTransform.gameObject.layer;
-                Collider col = colliderGameObject.AddComponent<BoxCollider>();
-                colliderGameObject.name = "X: " + x + "; Y: " + y + ";";
-                colliderGameObject.transform.parent = meshTransform;
-                colliderGameObject.transform.localPosition = vertices[remapped_vertices_data[i]];
-                Vector3 targetScale = Vector3.one * 0.001f;
-                targetScale.x = localXWidth;
-                targetScale.z = localYWidth;
-                colliderGameObject.transform.localScale = targetScale;
-                colliderGameObject.transform.localRotation = Quaternion.identity;
-                colliderTransforms[i] = colliderGameObject.transform;
-                Vector2 coords = new Vector2(xWidth * x - offsetX, yWidth * y - offsetY);
-                colliderCoords.Add(col, coords);
-                rawCoordsToCollider.Add(new Vector2Int(x, y), col);
+                for (int x = 0; x < meshXResolution - 1; x++)
+                {
+                    int i = y * meshXResolution + x;
+
+                    List<int> indices = new()
+                    {
+                        i, i + 1, i + meshXResolution, i + meshXResolution + 1
+                    };
+
+                    Vector3 center = Vector3.zero;
+
+                    foreach (int index in indices)
+                    {
+                        Handles.color = Color.white;
+
+                        var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                        sphere.transform.parent = mesh.transform;
+                        sphere.transform.localPosition = vertices[remapped_vertices_data[index]];
+                        sphere.transform.localScale = Vector3.one * 0.001f;
+                        sphere.name = $"Sphere{index}";
+
+                        center += meshTransform.TransformPoint(vertices[remapped_vertices_data[index]]);
+                    }
+
+                    center /= indices.Count;
+                    centres.Add(center);
+
+                    var colliderObj = new GameObject($"X: {x}; Y: {y};");
+                    colliderObj.layer = meshTransform.gameObject.layer;
+                    colliderObj.transform.parent = meshTransform;
+                    colliderObj.transform.localRotation = Quaternion.identity;
+                    colliderObj.transform.localScale = new Vector3(localXWidth, 0.001f, localYWidth);
+                    colliderObj.transform.localPosition = center + new Vector3(offsetX,0,offsetY);
+
+                    var collider = colliderObj.AddComponent<BoxCollider>();
+                    int flatIndex = y * meshXResolution + x;
+                    colliderTransforms[flatIndex] = colliderObj.transform;
+                    Vector2 coords = new Vector2(center.x - offsetX, center.y - offsetY);
+                    colliderCoords.Add(collider, coords);
+                    rawCoordsToCollider.Add(new(x, y), collider);
+                }
             }
+
+
+            // for (int i = 0; i < remapped_vertices_data.Length; i++)
+            // {
+            //     int x = i % meshXResolution;
+            //     int y = i / meshXResolution;
+            //     GameObject colliderGameObject = new GameObject();
+            //     colliderGameObject.layer = meshTransform.gameObject.layer;
+            //     Collider col = colliderGameObject.AddComponent<BoxCollider>();
+            //     colliderGameObject.name = "X: " + x + "; Y: " + y + ";";
+            //     colliderGameObject.transform.parent = meshTransform;
+            //     colliderGameObject.transform.localPosition = vertices[remapped_vertices_data[i]];
+            //     Vector3 targetScale = Vector3.one * 0.001f;
+            //     targetScale.x = localXWidth;
+            //     targetScale.z = localYWidth;
+            //     colliderGameObject.transform.localScale = targetScale;
+            //     colliderGameObject.transform.localRotation = Quaternion.identity;
+            //     colliderTransforms[i] = colliderGameObject.transform;
+            //     Vector2 coords = new Vector2(xWidth * x - offsetX, yWidth * y - offsetY);
+            //     colliderCoords.Add(col, coords);
+            //     rawCoordsToCollider.Add(new Vector2Int(x, y), col);
+            // }
 
             colliderObjects = new TransformAccessArray(colliderTransforms);
             vertices_native = new NativeArray<Vector3>(vertices.ToArray(), Allocator.Persistent);
@@ -160,7 +254,7 @@ namespace ubco.ovilab.HPUI.Interaction
         protected void UpdateColliderPositions()
         {
             mesh.BakeMesh(tempMesh, true);
-            tempMesh.GetVertices(vertices);
+            tempMesh.GetVertices(vertices); //meshXres * mesh Y res
             tempMesh.GetNormals(normals);
 
             vertices_native.CopyFrom(vertices.ToArray());
@@ -201,6 +295,15 @@ namespace ubco.ovilab.HPUI.Interaction
 
                 col.localPosition = temppos;
                 col.localRotation = Quaternion.LookRotation(forward, Normals[RemappedIndices[i]]);
+            }
+        }
+
+        private void OnDrawGizmos()
+        {
+            foreach (Vector3 centre in centres)
+            {
+                Handles.color = Color.red;
+                Handles.SphereHandleCap(0, centre, Quaternion.identity, 0.001f, EventType.Repaint);
             }
         }
     }
