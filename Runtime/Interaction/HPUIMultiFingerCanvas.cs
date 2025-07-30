@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using BasicStats;
 using ubco.ovilab.HPUI.Interaction;
@@ -23,7 +24,7 @@ namespace ubco.ovilab.HPUI.Core
 
         public HPUIMeshContinuousInteractable[,] HPUICanvasComponents => HPUIInteractables.GetCells();
         [SerializeField] private HPUIInteractable2DArray HPUIInteractables = new();
-        
+
         [Tooltip("In Percent")]
         [SerializeField] private Vector2Int boundaryBuffer;
 
@@ -35,6 +36,11 @@ namespace ubco.ovilab.HPUI.Core
         [SerializeField] private float posFilterMinCutoff = 1f;
         [Tooltip("Beta value for position filter")]
         [SerializeField] private float posFilterBeta = 50;
+
+        [Header("HPUI Settings")]
+        // TODO: CHANGE THIS TO BE TIME DEPENDENT INSTEAD OF FRAME DEPENDENT
+        [Tooltip("Waits n frames before definitely ending the gesture")]
+        [SerializeField] private int frameBufferBeforeEndingGesture;
 
         [Header("Debug Info")]
         [SerializeField] private List<Vector2> currentGesturePoints = new();
@@ -49,8 +55,17 @@ namespace ubco.ovilab.HPUI.Core
 
         private readonly Quaternion VectorCorrection = Quaternion.Euler(0, 0, 90f);
         private int notValidPoints = 0;
+
+        //TODO: ALSO MOVE THIS TO BE TIME DEPENDENT
+        [SerializeField] private int currentGestureStoppedFrameCount = 0;
+
         private bool hasGestureStarted = false;
         [SerializeField] private HPUICanvasState canvasState = HPUICanvasState.INVALID;
+
+        private Coroutine gestureEndRoutine = null;
+        private HPUICanvasEventArgs canvasArgs;
+        private HPUIGestureEventArgs lastCachedArgs;
+
         private void OnEnable()
         {
             for (int i = 0; i < HPUIInteractables.GridSize.x; i++)
@@ -61,6 +76,8 @@ namespace ubco.ovilab.HPUI.Core
                 }
             }
             posFilter = new(90, posFilterMinCutoff, posFilterBeta);
+            //TODO: REmove if everything else is working fine
+            gestureEndRoutine = null;
         }
 
         private void OnDisable()
@@ -82,7 +99,7 @@ namespace ubco.ovilab.HPUI.Core
         private void RestitchInteractables()
         {
             int maxX = HPUIInteractables.GridSize.x, maxY = HPUIInteractables.GridSize.y;
-            
+
             for (int i = 0; i < maxX; i++)
             {
                 x_size += HPUIInteractables.GetCell(i,0).X_size;
@@ -102,8 +119,8 @@ namespace ubco.ovilab.HPUI.Core
                     foreach ((Vector2Int key, Collider value) in HPUIInteractables.GetCell(i,j).ContinuousCollidersManager.RawCoordsToCollider)
                     {
                         //The older coordinates are between (0,0) to (MeshXRes, MeshYRes) for each interactable
-                        //Refitting it (0,0) and (MeshXRes * MaxX, MeshYRes * MaxY) 
-                        Vector2Int coordinate = new(key.x + i * HPUIInteractables.GetCell(i, j).MeshXResolution, 
+                        //Refitting it (0,0) and (MeshXRes * MaxX, MeshYRes * MaxY)
+                        Vector2Int coordinate = new(key.x + i * HPUIInteractables.GetCell(i, j).MeshXResolution,
                                                     key.y + j * HPUIInteractables.GetCell(i, j).MeshYResolution);
                         coordsToCollider[coordinate] = value;
                         Debug.Log(coordinate);
@@ -116,7 +133,6 @@ namespace ubco.ovilab.HPUI.Core
         }
         private void HandleGesture(HPUIGestureEventArgs eventArgs)
         {
-            HPUICanvasEventArgs canvasArgs;
             HPUIMeshContinuousInteractable interactable = eventArgs.CurrentTrackingInteractable as HPUIMeshContinuousInteractable;
             Vector2 inputPosition = eventArgs.CurrentTrackingInteractablePoint;
             if (!ProcessTouchPoints(inputPosition, interactable, out Vector2 processedPosition))
@@ -154,29 +170,36 @@ namespace ubco.ovilab.HPUI.Core
                             break;
                         }
                     }
-
+                    currentGestureStoppedFrameCount = 0;
+                    if(gestureEndRoutine != null)
+                    {
+                        StopCoroutine(gestureEndRoutine);
+                        gestureEndRoutine = null;
+                    }
                     canvasState = HPUICanvasState.Processing;
                     currentGesturePoints.Add(processedPosition);
                     canvasArgs = new HPUICanvasEventArgs(canvasState, currentGesturePoints);
+                    lastCachedArgs = eventArgs;
                     OnCanvasInteractions?.Invoke(eventArgs, canvasArgs);
                     break;
                 }
                 case HPUIGestureState.Stopped:
                 {
-                    canvasState = HPUICanvasState.Completed;
-                    if (currentGesturePoints.Count < 5 || eventArgs.CumulativeDistance < 0.005f)
+                    // rather than triggering the gesture end right away
+                    // we start a cooldown to ensure that a gesture doesn't
+                    // prematurely end, leading to false accuracy numbers down the line
+                    // and avoiding participant frustration
+
+                    // Debug.Log("===== We are unsure if gesture has ended");
+                    if (gestureEndRoutine == null)
                     {
-                        canvasState = HPUICanvasState.Cancelled;
+                        gestureEndRoutine = StartCoroutine(AttemptGestureEndRoutine());
+
+                        // using the current gesture point from the previous frame
+                        // TODO: Ensure this isn't breaking logic elsewhere
+                        canvasState = HPUICanvasState.Processing;
                         canvasArgs = new HPUICanvasEventArgs(canvasState, currentGesturePoints);
-                        OnCanvasInteractions?.Invoke(eventArgs, canvasArgs);
-                        ResetGesture();
-                        break;
                     }
-                    canvasArgs.GesturePositions = Stats.RemoveOutliers(currentGesturePoints);
-                    Vector2Int binnedDirection = CalculateDirection(canvasArgs.GesturePositions,2,2, out Vector2 rawDirection);
-                    canvasArgs = new HPUICanvasEventArgs(canvasState, currentGesturePoints,binnedDirection, rawDirection);
-                    OnCanvasInteractions?.Invoke(eventArgs, canvasArgs);
-                    ResetGesture();
                     break;
                 }
                 case HPUIGestureState.Canceled:
@@ -192,12 +215,41 @@ namespace ubco.ovilab.HPUI.Core
             }
         }
 
+        private void EndHPUICanvasGesture(HPUIGestureEventArgs eventArgs)
+        {
+            HPUICanvasEventArgs canvasArgs;
+            // Debug.Log("======== Trigger end now");
+            if(gestureEndRoutine != null)
+            {
+                StopCoroutine(gestureEndRoutine);
+                gestureEndRoutine = null;
+            }
+
+            canvasState = HPUICanvasState.Completed;
+            if (currentGesturePoints.Count < 5)
+            {
+                Debug.Log("cancelled");
+                canvasState = HPUICanvasState.Cancelled;
+                canvasArgs = new HPUICanvasEventArgs(canvasState, currentGesturePoints);
+                OnCanvasInteractions?.Invoke(eventArgs, canvasArgs);
+                ResetGesture();
+                return;
+            }
+            canvasArgs.GesturePositions = Stats.RemoveOutliers(currentGesturePoints);
+            Vector2Int binnedDirection = CalculateDirection(canvasArgs.GesturePositions,2,2, out Vector2 rawDirection);
+            canvasArgs = new HPUICanvasEventArgs(canvasState, currentGesturePoints,binnedDirection, rawDirection);
+            OnCanvasInteractions?.Invoke(eventArgs, canvasArgs);
+            ResetGesture();
+        }
+
         public void ResetGesture()
         {
             canvasState = HPUICanvasState.INVALID;
             currentGesturePoints.Clear();
             posFilter = new(90, posFilterMinCutoff, posFilterBeta);
             hasGestureStarted = false;
+            currentGestureStoppedFrameCount = 0;
+            if(gestureEndRoutine != null) StopCoroutine(gestureEndRoutine);
         }
 
         public bool ProcessTouchPoints(Vector2 touchPoint, HPUIMeshContinuousInteractable canvasComponent, out Vector2 processedPosition)
@@ -223,7 +275,7 @@ namespace ubco.ovilab.HPUI.Core
         {
             Vector2Int? canvasID = HPUIInteractables.GetID(currentInteractable);
             Debug.Assert(canvasID!=null, $"Canvas not found: {currentInteractable.transform.name}");
-            
+
             Vector2 canvasMinBounds = (Vector2) canvasID;
             Vector2 canvasBoundaryEnd = canvasMinBounds + Vector2.one;
             Vector2 bufferArea = new Vector2(boundaryBuffer.x/100f, boundaryBuffer.y/100f);
@@ -247,6 +299,18 @@ namespace ubco.ovilab.HPUI.Core
             return outputVector;
         }
 
+        private IEnumerator AttemptGestureEndRoutine()
+        {
+            // Debug.Log("===== Coroutine triggered even once?");
+            while (currentGestureStoppedFrameCount <= frameBufferBeforeEndingGesture)
+            {
+                OnCanvasInteractions?.Invoke(lastCachedArgs, canvasArgs);
+                // Debug.Log("===== ALLO?");
+                yield return new WaitForSeconds(0.01f);
+                currentGestureStoppedFrameCount++;
+            }
+            EndHPUICanvasGesture(lastCachedArgs);
+        }
     }
 
     public struct HPUICanvasEventArgs
