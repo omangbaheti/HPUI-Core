@@ -49,7 +49,7 @@ namespace ubco.ovilab.HPUI.Interaction
         /// <summary>
         /// If subscribed to, provides the data of the raycasts during each frame.
         /// </summary>
-        public event System.Action<List<RaycastDataRecord>> raycastData;
+        public event System.Action<HPUIRayCastDetectionBaseLogic, List<RaycastDataRecord>> raycastData;
 
         protected IHPUIInteractor interactor;
         protected Dictionary<IHPUIInteractable, HPUIInteractionInfo> validTargets = new();
@@ -157,7 +157,7 @@ namespace ubco.ovilab.HPUI.Interaction
                 if (debugRayVisual == DebugRayVisual.All)
                 {
                     Color rayColor = validInteractable && isSelection ? Color.green : Color.red;
-                    Debug.DrawLine(interactionPoint, interactionPoint + direction.normalized * angle.RaySelectionThreshold, rayColor);
+                    Debug.DrawLine(interactionPoint, interactionPoint + direction.normalized * Mathf.Min(angle.RaySelectionThreshold, InteractionHoverRadius), rayColor);
                 }
                 if (debugRayVisual == DebugRayVisual.OnlyActive)
                 {
@@ -183,7 +183,7 @@ namespace ubco.ovilab.HPUI.Interaction
 
             if (raycastData != null)
             {
-                raycastData.Invoke(raycastDataRecords);
+                raycastData.Invoke(this, raycastDataRecords);
                 raycastDataRecords = new();
             }
         }

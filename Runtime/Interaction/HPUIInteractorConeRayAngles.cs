@@ -39,6 +39,15 @@ namespace ubco.ovilab.HPUI.Interaction
 
         public void OnEnable()
         {
+            RefreshCache();
+        }
+
+        /// <summary>
+        /// Force refresh the cache.
+        /// This needs to be called if the angles are updated after the asset is created/loaded.
+        /// </summary>
+        public void RefreshCache()
+        {
             ActiveFingerAngles = new();
 
             Dictionary<XRHandJointID, List<HPUIInteractorConeRayAngleSides>> jointToAnglesMapping = new()
@@ -92,6 +101,15 @@ namespace ubco.ovilab.HPUI.Interaction
                 return angles.AsReadOnly();
             }
             return null;
+        }
+
+        /// <summary>
+        /// Serialize the data as a json object.
+        /// <seealso cref="LoadAndSaveConeDataFromJson"/>
+        /// </summary>
+        public string ToJsonString()
+        {
+            return JsonUtility.ToJson(this);
         }
     }
 

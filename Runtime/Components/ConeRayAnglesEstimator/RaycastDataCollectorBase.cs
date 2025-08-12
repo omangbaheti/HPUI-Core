@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ubco.ovilab.HPUI.Interaction;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.XR.Hands;
 
 namespace ubco.ovilab.HPUI
 {
@@ -25,6 +26,14 @@ namespace ubco.ovilab.HPUI
         /// </summary>
         public HPUIInteractor Interactor { get => interactor; set => interactor = value; }
 
+        [SerializeReference, Tooltip("The estimator to compute closest joint and side.")]
+        private HPUIConeRayCastDetectionLogic.ClosestJointAndSideEstimator closestJointAndSideEstimator;
+
+        /// <summary>
+        /// The estimator to compute closest joint and side.
+        /// </summary>
+        public HPUIConeRayCastDetectionLogic.ClosestJointAndSideEstimator ClosestJointAndSideEstimator { get => closestJointAndSideEstimator; set => closestJointAndSideEstimator = value; }
+
         /// <summary>
         /// The flag indicating if data collection is active.
         /// </summary>
@@ -38,7 +47,7 @@ namespace ubco.ovilab.HPUI
 
         private HPUIFullRangeRayCastDetectionLogic fullRayDetectionLogic;
         private HPUIInteractorFullRangeAngles fullRangeAngles;
-        protected List<List<HPUIRayCastDetectionBaseLogic.RaycastDataRecord>> currentInteractionData = new();
+        protected List<RaycastDataRecordsContainer> currentInteractionData = new();
 
         public List<ConeRayComputationDataRecord> DataRecords { get; protected set; }
 
@@ -58,13 +67,19 @@ namespace ubco.ovilab.HPUI
                 return false;
             }
 
+            if (ClosestJointAndSideEstimator.XRHandTrackingEvents == null)
+            {
+                Debug.LogError($"The `xrHandTrackingEvents` is not set!");
+                return false;
+            }
+
             if (!(interactor.DetectionLogic is HPUIFullRangeRayCastDetectionLogic fullRayDetectionLogic))
             {
                 throw new ArgumentException("Interactor is expected to have `HPUIFullRangeRayCastDetectionLogic` as the DetectionLogic.");
             }
 
             this.DataRecords = new List<ConeRayComputationDataRecord>();
-            this.currentInteractionData = new List<List<HPUIRayCastDetectionBaseLogic.RaycastDataRecord>>();
+            this.currentInteractionData = new List<RaycastDataRecordsContainer>();
             this.fullRayDetectionLogic = fullRayDetectionLogic;
             this.fullRangeAngles = fullRayDetectionLogic.FullRangeRayAngles;
 
@@ -76,7 +91,7 @@ namespace ubco.ovilab.HPUI
         /// <summary>
         /// The callback used to get the data from the <see cref="HPUIFullRangeRayCastDetectionLogic.raycastData"/>.
         /// </summary>
-        protected void RaycastDataCallback(List<HPUIRayCastDetectionBaseLogic.RaycastDataRecord> raycastDataRecords)
+        protected void RaycastDataCallback(HPUIRayCastDetectionBaseLogic detectionLogic, List<HPUIRayCastDetectionBaseLogic.RaycastDataRecord> raycastDataRecords)
         {
             if (PauseDataCollection)
             {
@@ -87,9 +102,11 @@ namespace ubco.ovilab.HPUI
                             ((HPUIFullRangeRayCastDetectionLogic)interactor.DetectionLogic).FullRangeRayAngles,
                             $"Interactor {fullRangeAngles.name} is not the same as {((HPUIFullRangeRayCastDetectionLogic)interactor.DetectionLogic).FullRangeRayAngles.name}");
 
+            ClosestJointAndSideEstimator.Estimate(out XRHandJointID closestJoint, out FingerSide closestSide);
+
             if (raycastDataRecords.Count > 0)
             {
-                currentInteractionData.Add(raycastDataRecords);
+                currentInteractionData.Add(new RaycastDataRecordsContainer(raycastDataRecords, closestSide, closestJoint));
             }
         }
 
